@@ -1,28 +1,84 @@
 #!/bin/env zsh
 set -eo pipefail
 
-declare -a DIRECTORIES_TO_SKIP
+typeset -A PARTITIONS
+PARTITIONS=([root]=/ [home]=/home)
 
 DRIVE=/backups
-DESTINATION=$DRIVE/$(date +%Y/%m/%d)
-BACKUP_FILE=$DESTIONATION/backup.tar.bz2
+DESTINATION=$DRIVE/archives/$(date +%Y/%m/%d)
+CHECKSUM_FILE=checksum.txt
 
-DIRECTORIES_TO_SKIP=(/proc /var/run /var/)
 
-function die() {
-  echo "backup: error - $@" 1>&2
-  exit 1
+# usage: create_archive <destination> <source>
+function create_archive() {
+  local dst=$1.tar.bz2
+  local src=$2
+
+  if [[ -s $dst ]]; then
+    echo "$dst already exists. Skipping."
+    return
+  fi
+
+  # if any more directories or files are excluded
+  # make sure to update the `restore` script so we
+  # recreate the directories.
+  sudo tar --create --preserve-permissions --bzip2 \
+    --file=$dst \
+    --exclude=/proc \
+    --exclude=/tmp \
+    --exclude=/mnt \
+    --exclude=/dev \
+    --exclude=/sys \
+    --exclude=/run \
+    --exclude=/media \
+    --exclude=/var/log \
+    --exclude=/var/cache/apt/archives \
+    --exclude='/usr/src/linux-headers*' \
+    --exclude='/home/*/.cache' \
+    --exclude='/home/*/.local/share/Trash' \
+    --exclude=/var/lib/snapd/cache \
+    --one-file-system $src
 }
 
+# calculate hash of new archive and store it in the 
+# information text file with the archive
+# 
+# usage: create_checksum <destination> <archive>
+function create_checksum() {
+  local destination=$1
+  local archive=$2
+  local info_file=$destination/$CHECKSUM_FILE
+
+  if [[ ! -e $info_file ]]; then
+    touch $info_file
+  fi
+
+  b2sum ${destination}/${archive}.tar.bz2 >> $info_file
+}
+
+
 if ! (mountpoint --quiet $DRIVE); then
-  die "Drive not mounted at $DRIVE"
+  echo "backup: error - $@" 1>&2
+  exit 1
 fi
 
-if [[ -s $BACKUP_FILE ]]; then
-  die "$BACKUP_FILE already exists"
-fi
+for type in ${(k)PARTITIONS}; do
+  # Create the necessary files in the $DRIVE/archives directory.
+  # The archives should be split up like so /<year>/<month>/<day/ 
+  # archives
+  # └── 2022
+  #     └── 04
+  #         └── 12
+  #             ├── home.tar.bz2
+  #             ├── root.tar.gz
+  #             └── checksum.txt
+  if [[ ! -d $DESTINATION ]]; then
+    mkdir --parents $DESTINATION
+  fi
 
-echo "Hi skip!"
+  # Back that shit up!
+  create_archive $DESTINATION/$type ${PARTITIONS[$type]}
+  create_checksum $DESTINATION $type 
+done
 
-# logging
-# * * * * * myjob.sh >> /var/log/myjob.log 2>&1
+echo 1
