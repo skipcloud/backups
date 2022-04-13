@@ -1,0 +1,28 @@
+#!/bin/env zsh
+set -eo pipefail
+
+declare -a DIRECTORIES_TO_SKIP
+
+DRIVE=/backups
+DESTINATION=$DRIVE/$(date +%Y/%m/%d)
+BACKUP_FILE=$DESTIONATION/backup.tar.bz2
+
+DIRECTORIES_TO_SKIP=(/proc /var/run /var/)
+
+function die() {
+  echo "backup: error - $@" 1>&2
+  exit 1
+}
+
+if ! (mountpoint --quiet $DRIVE); then
+  die "Drive not mounted at $DRIVE"
+fi
+
+if [[ -s $BACKUP_FILE ]]; then
+  die "$BACKUP_FILE already exists"
+fi
+
+echo "Hi skip!"
+
+# logging
+# * * * * * myjob.sh >> /var/log/myjob.log 2>&1
