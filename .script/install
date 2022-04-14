@@ -1,0 +1,23 @@
+#!/bin/env zsh
+
+CRONFILE=backup.cron
+
+if [[ $(id --user) != '0' ]]; then
+  echo 'error: script should be ran using `sudo`' >&2 
+  exit 1
+fi
+
+if [[ ! -d '/var/log/backups' ]]; then
+  mkdir --parents /var/log/backups
+fi
+
+if [[ ! -f ".files/${CRONFILE}" ]]; then
+  echo "error: cannot find cronfile '$CRONFILE'" >&2
+fi
+
+crontab -l > /tmp/oldcron
+
+cat ".files/${CRONFILE}" >> /tmp/oldcron
+
+crontab /tmp/oldcron
+rm /tmp/oldcron

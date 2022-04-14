@@ -1,15 +1,16 @@
 # Backups
 
-I finally have a dedicated harddrive for storing backups so I wrote some scripts to help me create and restore archives:
+I finally have a dedicated hard drive for storing backups so I wrote some
+scripts to help me create and restore archives:
 
 - `backup.sh`: for making backups of various partitions.
 - `restore.sh`: for restoring data to partitions.
 
-For more information on either script use the `--help` option. There is information on below on [how to restore data](#restoring-data) because I will definitely forget how to do it within a couple of weeks of writing this.
-
 ## Setting up cron job
 
-TODO
+Run `sudo make install` or `sudo make`. `sudo` is required because it adds a
+cronjob to the end of the root user's crontab. The job will back up the `/` and
+`/home` partitions every other day at 01:00am.
 
 ## Restoring Data
 
@@ -21,9 +22,12 @@ but if that link should die someday here are the basic steps.
 3. Format partitions with ext4 fs.
 4. Mount paritions and `backups` drive.
 5. Update the `/etc/fstab` file in the `root` patition with the new UUIDs.
-6. Use `restore.sh` to restore data to the various paritions, check `restore.sh --help` for more information.
+6. Use `restore.sh` to restore data to the various paritions, check `restore.sh
+--help` for more information.
 7. For the `root` drive run `restore.sh grub` to restore grub (duh).
-8. If that fails then boot from the pen drive again and run the following command to try fixing the boot process on the drive and follow the instructions spat out by the `boot-repair` program:
+8. If that fails then boot from the pen drive again and run the following comman
+d to try fixing the boot process on the drive and follow the instructions spat
+out by the `boot-repair` program:
 
 ```bash
 sudo apt-add-repository ppa:yannubuntu/boot-repair
