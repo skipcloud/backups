@@ -3,8 +3,8 @@
 I finally have a dedicated hard drive for storing backups so I wrote some
 scripts to help me create and restore archives:
 
-- `backup.sh`: for making backups of various partitions.
-- `restore.sh`: for restoring data to partitions.
+- `backup`: for making backups of various partitions.
+- `restore`: for restoring data to partitions.
 
 ## Setting up cron job
 
