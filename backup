@@ -25,8 +25,9 @@ function create_archive() {
   # if any more directories or files are excluded
   # make sure to update the `restore` script so we
   # recreate the directories.
-  tar --create --preserve-permissions --bzip2 \
-    --file=$dst \
+  tar --create --file=$dst \
+    --preserve-permissions \
+    --bzip2 \
     --exclude=/proc \
     --exclude=/tmp \
     --exclude=/mnt \
@@ -39,6 +40,7 @@ function create_archive() {
     --exclude='/usr/src/linux-headers*' \
     --exclude='/home/*/.cache' \
     --exclude='/home/*/.local/share/Trash' \
+    --exclude='/home/*/node_modules' \
     --exclude=/var/lib/snapd/cache \
     --one-file-system $src
 }

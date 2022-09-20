@@ -2,22 +2,36 @@
 
 CRONFILE=backup.cron
 
+# Run with elevated permissions so we can alter root's crontab
 if [[ $(id --user) != '0' ]]; then
   echo 'error: script should be ran using `sudo`' >&2 
   exit 1
 fi
 
+# Create backup logs for debugging
 if [[ ! -d '/var/log/backups' ]]; then
   mkdir --parents /var/log/backups
 fi
 
+# Would be weird if we couldn't find the file but check anyway
 if [[ ! -f ".files/${CRONFILE}" ]]; then
   echo "error: cannot find cronfile '$CRONFILE'" >&2
 fi
 
+# Output the current crontab to a file
 crontab -l > /tmp/oldcron
 
+# Append our cronjob
 cat ".files/${CRONFILE}" >> /tmp/oldcron
 
+# Set the crontab
 crontab /tmp/oldcron
 rm /tmp/oldcron
+
+if [[ ! -f ".files/run_backup.sh" ]]; then
+  echo "error: cannot find backup script wrapper" >&2
+fi
+
+# Install backup script wrapper, this is needed so we can
+# call the backup script with arguments in our crontab
+ln -s $(git rev-parse --show-toplevel)/.files/run_backup.sh /opt/run_backup.sh
